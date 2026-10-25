@@ -79,7 +79,16 @@
     return hit ? COLORS[hit] : "#d1d5db";
   };
 
-  const P = (window.PRODUCTOS || []).map((source, i) => {
+  // Mezcla toda la planilla una vez por visita. Así el catálogo no conserva
+  // bloques consecutivos de la fuente, pero tampoco salta de orden mientras
+  // el cliente navega, filtra o carga más productos.
+  const shuffledSources = [...(window.PRODUCTOS || [])];
+  for (let i = shuffledSources.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffledSources[i], shuffledSources[j]] = [shuffledSources[j], shuffledSources[i]];
+  }
+
+  const P = shuffledSources.map((source, i) => {
     const operatingMargin = marginForProduct(source.id);
     const p = {
       ...source,
@@ -533,7 +542,7 @@
               ${chips.map(([t, patch]) => `<span class="chip">${t}<button data-go="${shopUrl(f, patch)}" aria-label="Quitar">${ico.x}</button></span>`).join("")}
             </div>
             <select id="sortSel" aria-label="Ordenar">
-              ${[["", "Más relevantes"], ["precio_asc", "Menor precio"], ["precio_desc", "Mayor precio"], ["descuento", "Mayor descuento"], ["az", "Nombre A–Z"]]
+              ${[["", "Orden aleatorio"], ["precio_asc", "Menor precio"], ["precio_desc", "Mayor precio"], ["descuento", "Mayor descuento"], ["az", "Nombre A–Z"]]
                 .map(([v, t]) => `<option value="${v}" ${f.orden === v ? "selected" : ""}>${t}</option>`).join("")}
             </select>
           </div>
