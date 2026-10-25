@@ -2,15 +2,18 @@
 (() => {
   "use strict";
 
-  const MIN_COMPRA = 150000;
+  const MIN_COMPRA = 0; // 0 = venta minorista sin mínimo
   const EMAIL_PEDIDOS = "pedidos@bolsamayor.com.ar";
 
-  // Política comercial: costo con 20% de descuento de empleado, margen operativo
-  // estable por producto entre 20% y 30%, y 6,29% de comisión por cobro inmediato.
+  // Política comercial. EPA publica sus precios + IVA, así que el costo real es
+  // precio EPA × (1 − 20% de descuento de empleado) × 1,21. El precio de venta deja un
+  // margen estable por producto entre 20% y 30% después de pagar la comisión de
+  // Mercado Pago por cobro inmediato (6,29% + IVA). La ganancia se reparte 50/50.
+  const IVA = 0.21;
   const EMPLOYEE_DISCOUNT = 0.20;
   const MIN_OPERATING_MARGIN = 0.20;
   const MAX_OPERATING_MARGIN = 0.30;
-  const PAYMENT_FEE = 0.0629;
+  const PAYMENT_FEE = 0.0629 * (1 + IVA);
   const marginForProduct = (id) => {
     let seed = Math.imul((Number(id) || 1) ^ 0x9e3779b9, 2654435761) >>> 0;
     seed = (seed ^ (seed >>> 16)) >>> 0;
@@ -18,8 +21,8 @@
   };
   const salePrice = (officialPrice, margin) => {
     if (!officialPrice) return 0;
-    const multiplier = (1 - EMPLOYEE_DISCOUNT) / (1 - margin - PAYMENT_FEE);
-    return Math.ceil((officialPrice * multiplier) / 10) * 10;
+    const cost = officialPrice * (1 - EMPLOYEE_DISCOUNT) * (1 + IVA);
+    return Math.ceil(cost / (1 - margin - PAYMENT_FEE) / 100) * 100;
   };
 
   // ---------- utilidades ----------
@@ -137,6 +140,28 @@
     toast(`<img src="${esc(p.img)}" alt=""><span><b>Agregado al pedido</b><br>${esc(p.n)}${opt ? " · " + esc(opt) : ""}</span><button data-drawer="cart">Ver pedido</button>`);
     if (drawerOpen) renderDrawer();
   }
+  // Vuela una copia de la foto del producto hasta el ícono del carrito.
+  function flyToCart(img) {
+    if (!img || document.body.classList.contains("reduce-motion")) return;
+    const from = img.getBoundingClientRect();
+    const target = $('[data-drawer="cart"] .badge-wrap').getBoundingClientRect();
+    if (!from.width || !target.width) return;
+    const ghost = img.cloneNode();
+    ghost.removeAttribute("onload");
+    ghost.className = "fly-ghost";
+    Object.assign(ghost.style, { left: `${from.left}px`, top: `${from.top}px`, width: `${from.width}px`, height: `${from.height}px` });
+    document.body.appendChild(ghost);
+    const dx = target.left + target.width / 2 - (from.left + from.width / 2);
+    const dy = target.top + target.height / 2 - (from.top + from.height / 2);
+    const anim = ghost.animate([
+      { transform: "translate(0,0) scale(1)", opacity: 1, borderRadius: "14px" },
+      { transform: `translate(${dx * 0.55}px, ${dy * 0.55 - 80}px) scale(.55)`, opacity: 1, borderRadius: "50%", offset: 0.55 },
+      { transform: `translate(${dx}px, ${dy}px) scale(.08)`, opacity: 0.4, borderRadius: "50%" },
+    ], { duration: 820, easing: "cubic-bezier(.5,0,.3,1)" });
+    anim.onfinish = () => ghost.remove();
+  }
+  const imgOf = (el) => el?.closest(".card, .deal, .feat-big, .mini, .line")?.querySelector("img");
+
   function toggleFav(id) {
     if (favs.has(id)) favs.delete(id); else favs.add(id);
     saveFavs();
@@ -221,11 +246,12 @@
     const used = new Set();
     const slides = [
       { d: "valijas", kicker: "Temporada de viajes", title: "Viajá liviano,<br>llegá con estilo", text: "Carry on, valijas y accesorios de viaje de las marcas que más se venden.", c: "#3b8bd0" },
-      { d: "madre", kicker: "Día de la Madre", title: "Regalos que<br>enamoran", text: "Carteras, billeteras, beauty y fragancias para tu vidriera.", c: "#e14f69" },
+      { d: "madre", kicker: "Día de la Madre", title: "Regalos que<br>enamoran", text: "Carteras, billeteras, beauty y fragancias para regalar.", c: "#e14f69", prefer: "carteras" },
       { d: "escolar", kicker: "Escolar", title: "Mochilas para<br>todo el año", text: "Con carro, de espalda y cartucheras de sus personajes favoritos.", c: "#16a37e" },
     ].map((s) => {
       const list = ofDept(s.d);
-      return { ...s, p: pickFor(list, used), max: maxDisc(list) };
+      const preferred = s.prefer ? list.filter((p) => inDept(p, s.prefer)) : list;
+      return { ...s, p: pickFor(preferred.length ? preferred : list, used), max: maxDisc(list) };
     });
     const tiles = [
       { d: "billeteras", c: "#ff7448" },
@@ -296,7 +322,7 @@
           ${tiles.map((t) => `
             <a class="tile" href="#/tienda?cat=${t.d}" style="--bg-c:${t.c}">
               <h3>${DEPT[t.d].n}</h3>
-              <span><b>${t.list.length} productos</b>${maxDisc(t.list) ? `Hasta -${maxDisc(t.list)}%` : `Desde ${money(minPrice(t.list))}`}</span>
+              <span><b><em class="num" data-count="${t.list.length}">${t.list.length}</em> productos</b>${maxDisc(t.list) ? `Hasta -${maxDisc(t.list)}%` : `Desde ${money(minPrice(t.list))}`}</span>
               <div class="t-img">${imgTag(t.p.img)}</div>
             </a>`).join("")}
         </div>
@@ -312,7 +338,7 @@
         <div class="cats">
           ${cats.map((x) => `
             <a class="cat" href="#/tienda?cat=${x.d}" style="--bg-c:${x.c}">
-              <b>${DEPT[x.d].n}</b><span>(${x.list.length} productos)</span>
+              <b>${DEPT[x.d].n}</b><span>(<em class="num" data-count="${x.list.length}">${x.list.length}</em> productos)</span>
               <div class="c-img">${imgTag(x.p.img)}</div>
             </a>`).join("")}
         </div>
@@ -365,7 +391,7 @@
     </div>
 
     <div class="marquee"><div class="marquee-track">${Array(2).fill([
-      "Venta mayorista para comercios", "Envíos a todo el país", "Compra mínima $150.000 + IVA",
+      "Marroquinería de marca", "Envíos a todo el país", "Confirmamos stock antes de que pagues",
       `Ofertas de hasta ${maxDisc(P)}% OFF`, `+${Math.floor(P.length / 100) * 100} productos`, "Las mejores marcas de marroquinería",
     ].map((t) => `<span>${ico.bolt} ${t}</span>`).join("")).join("")}</div></div>
 
@@ -426,7 +452,13 @@
       const h = Math.floor(s / 3600); s -= h * 3600;
       const m = Math.floor(s / 60); s -= m * 60;
       const pad = (n) => String(n).padStart(2, "0");
-      el.innerHTML = `<span><b>${pad(h)}</b>hs</span><span><b>${pad(m)}</b>min</span><span><b>${pad(s)}</b>seg</span>`;
+      const vals = [pad(h), pad(m), pad(s)];
+      if (!el.children.length) el.innerHTML = ["hs", "min", "seg"].map((u) => `<span><b></b>${u}</span>`).join("");
+      $$("b", el).forEach((b, k) => {
+        if (b.textContent === vals[k]) return;
+        b.textContent = vals[k];
+        b.classList.remove("flip"); void b.offsetWidth; b.classList.add("flip");
+      });
     };
     tick();
     countdownTimer = setInterval(tick, 1000);
@@ -649,7 +681,7 @@
           ${desc.length ? `<div class="pdp-desc"><ul>${desc.map((l) => `<li>${esc(l)}</li>`).join("")}</ul></div>` : ""}
           <div class="pdp-meta">
             <div>${ico.truck} Envíos a todo el país</div>
-            <div>${ico.box} Venta mayorista · compra mínima ${money(MIN_COMPRA)} + IVA</div>
+            <div>${ico.box} ${MIN_COMPRA ? `Compra mínima ${money(MIN_COMPRA)}` : "Confirmamos stock antes de que pagues"}</div>
             <div>${ico.mail} Consultas: <a href="mailto:${EMAIL_PEDIDOS}?subject=${encodeURIComponent("Consulta: " + p.n)}" style="color:var(--primary)">${EMAIL_PEDIDOS}</a></div>
           </div>
         </div>
@@ -663,6 +695,7 @@
     $("#pdpAdd").onclick = () => {
       const opt = readOptions(root, p, sel);
       if (opt == null) return;
+      flyToCart($("#gMain img"));
       addToCart(p.id, opt, getQ());
       const b = $("#pdpAdd");
       b.classList.add("done"); b.innerHTML = `${ico.check} ¡Agregado!`;
@@ -700,6 +733,7 @@
     $("#qaAdd").onclick = () => {
       const opt = readOptions(root, p, sel);
       if (opt == null) return;
+      flyToCart($("img", root));
       closeAll();
       addToCart(p.id, opt, getQ());
     };
@@ -715,6 +749,12 @@
     $("#drawer").setAttribute("aria-hidden", "false");
     showOverlay();
     renderDrawer();
+    staggerDrawer();
+  }
+  function staggerDrawer() {
+    const d = $("#drawer");
+    d.classList.remove("stagger"); void d.offsetWidth; d.classList.add("stagger");
+    setTimeout(() => d.classList.remove("stagger"), 700);
   }
   function renderDrawer() {
     $$(".tabs button").forEach((b) => b.classList.toggle("active", b.dataset.tab === drawerTab));
@@ -741,14 +781,14 @@
         </div>
         <div class="line-right"><b>${money(p.p * l.q)}</b><button class="line-del" data-del="${i}">Eliminar</button></div>
       </div>`;
-    }).join("") : `<div class="empty" style="box-shadow:none">${ico.cart}<b>Tu pedido está vacío</b>Agregá productos para armar tu compra mayorista.<br><br><a class="btn-dark" href="#/tienda" data-close>Ir a la tienda</a></div>`;
+    }).join("") : `<div class="empty" style="box-shadow:none">${ico.cart}<b>Tu pedido está vacío</b>Agregá productos para armar tu pedido.<br><br><a class="btn-dark" href="#/tienda" data-close>Ir a la tienda</a></div>`;
     if (!cart.length) { foot.innerHTML = ""; return; }
-    const tot = cartTotal(), falta = MIN_COMPRA - tot, pct = Math.min(100, (tot / MIN_COMPRA) * 100);
+    const tot = cartTotal(), falta = MIN_COMPRA - tot, pct = MIN_COMPRA ? Math.min(100, (tot / MIN_COMPRA) * 100) : 100;
     foot.innerHTML = `
-      <div class="min">${falta > 0 ? `Te faltan <b>${money(falta)}</b> para la compra mínima mayorista` : `<b style="color:var(--green)">✓ Llegaste a la compra mínima</b>`}
-        <div class="save-bar"><i class="${falta > 0 ? "" : "ok"}" style="width:${pct}%"></i></div></div>
+      ${MIN_COMPRA ? `<div class="min">${falta > 0 ? `Te faltan <b>${money(falta)}</b> para la compra mínima` : `<b style="color:var(--green)">✓ Llegaste a la compra mínima</b>`}
+        <div class="save-bar"><i class="${falta > 0 ? "" : "ok"}" style="width:${pct}%"></i></div></div>` : ""}
       <div class="tot"><span>Subtotal (${cartQty()} u.)</span><b>${money(tot)}</b></div>
-      <div class="tot-note">Compra mínima ${money(MIN_COMPRA)} + IVA. El envío se coordina al confirmar el pedido.</div>
+      <div class="tot-note">Precio final. El envío se coordina al confirmar el pedido.</div>
       <button class="btn-dark" id="checkoutBtn" ${falta > 0 ? "disabled" : ""}>Finalizar pedido</button>`;
     const cb = $("#checkoutBtn");
     if (cb) cb.onclick = checkout;
@@ -761,8 +801,8 @@
       <h3>Finalizar pedido</h3>
       <p>Completá tus datos y te enviamos el pedido por email para que el equipo de ventas lo confirme.</p>
       <form class="form" id="coForm">
-        <label class="full">Nombre o razón social<input name="nombre" required autocomplete="organization"></label>
-        <label>CUIT<input name="cuit" inputmode="numeric" placeholder="20-12345678-9"></label>
+        <label class="full">Nombre y apellido<input name="nombre" required autocomplete="name"></label>
+        <label>DNI o CUIT (opcional)<input name="cuit" inputmode="numeric"></label>
         <label>Teléfono<input name="tel" type="tel" required autocomplete="tel"></label>
         <label class="full">Email<input name="email" type="email" required autocomplete="email"></label>
         <label>Provincia<select name="prov" required><option value="">Elegí…</option>${PROV.map((x) => `<option>${x}</option>`).join("")}</select></label>
@@ -776,11 +816,11 @@
       e.preventDefault();
       const d = Object.fromEntries(new FormData(e.target));
       const body = [
-        `Pedido mayorista — ${d.nombre}`, `CUIT: ${d.cuit || "-"}`, `Tel: ${d.tel}`, `Email: ${d.email}`, `Destino: ${d.loc}, ${d.prov}`, "",
+        `Pedido — ${d.nombre}`, `DNI/CUIT: ${d.cuit || "-"}`, `Tel: ${d.tel}`, `Email: ${d.email}`, `Destino: ${d.loc}, ${d.prov}`, "",
         ...lines.map(({ p, l, sub }) => `${l.q} x ${p.n}${l.opt ? ` (${l.opt})` : ""} — ${money(sub)}  [id ${p.id}]`),
         "", `TOTAL: ${money(cartTotal())}`, d.notas ? `\nNotas: ${d.notas}` : "",
       ].join("\n");
-      location.href = `mailto:${EMAIL_PEDIDOS}?subject=${encodeURIComponent("Pedido mayorista — " + d.nombre)}&body=${encodeURIComponent(body)}`;
+      location.href = `mailto:${EMAIL_PEDIDOS}?subject=${encodeURIComponent("Pedido Bolsa Mayor — " + d.nombre)}&body=${encodeURIComponent(body)}`;
       cart = []; saveCart();
       openModal(`<div style="text-align:center"><div class="ok-ico">${ico.check}</div><h3>¡Pedido listo!</h3><p>Se abrió tu programa de email con el detalle del pedido. Envialo y el equipo de ventas te contacta para confirmar stock, pago y envío.</p><a class="btn-dark" href="#/" data-close>Seguir comprando</a></div>`);
     };
@@ -920,6 +960,39 @@
     });
   }
 
+  // Onda al tocar (funciona con dedo y mouse).
+  document.addEventListener("pointerdown", (e) => {
+    const el = e.target.closest(".btn-add, .btn-dark, .opt, .tile, .cat, .banner, .chip, .tabs button, .f-list button, .sl-arrow, .sc-btn");
+    if (!el || el.disabled || document.body.classList.contains("reduce-motion")) return;
+    const r = el.getBoundingClientRect();
+    const size = Math.max(r.width, r.height) * 2.2;
+    const w = document.createElement("span");
+    w.className = "ripple";
+    Object.assign(w.style, { width: `${size}px`, height: `${size}px`, left: `${e.clientX - r.left - size / 2}px`, top: `${e.clientY - r.top - size / 2}px` });
+    el.classList.add("has-ripple");
+    el.appendChild(w);
+    setTimeout(() => w.remove(), 650);
+  });
+
+  // Números que cuentan desde 0 cuando entran en pantalla.
+  let countObserver;
+  function initCounters() {
+    countObserver?.disconnect();
+    if (document.body.classList.contains("reduce-motion") || !("IntersectionObserver" in window)) return;
+    countObserver = new IntersectionObserver((entries) => entries.forEach((en) => {
+      if (!en.isIntersecting) return;
+      countObserver.unobserve(en.target);
+      const el = en.target, to = +el.dataset.count, t0 = performance.now(), dur = 1100;
+      const step = (t) => {
+        const k = Math.min(1, (t - t0) / dur);
+        el.textContent = Math.round(to * (1 - Math.pow(1 - k, 3)));
+        if (k < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    }), { threshold: 0.6 });
+    $$("[data-count]").forEach((n) => { n.textContent = "0"; countObserver.observe(n); });
+  }
+
   function route() {
     clearInterval(sliderTimer);
     clearInterval(countdownTimer);
@@ -933,6 +1006,9 @@
     else if (path.startsWith("/tienda")) renderShop(params);
     else renderHome();
     initPremiumMotion();
+    initCounters();
+    const app = $("#app");
+    app.classList.remove("page-in"); void app.offsetWidth; app.classList.add("page-in");
     $$("#navLinks a").forEach((a) => a.classList.toggle("active", a.getAttribute("href") === "#" + h || (h === "/" && a.getAttribute("href") === "#/")));
     if (!prevScroll) window.scrollTo({ top: 0, behavior: "instant" });
     route.last = path;
@@ -944,6 +1020,7 @@
     const add = t.closest("[data-add]");
     if (add) {
       e.preventDefault();
+      if (!BY_ID.get(+add.dataset.add).va.length) flyToCart(imgOf(add));
       const added = quickAdd(+add.dataset.add);
       if (added && add.classList.contains("btn-add") && !add.closest(".drawer")) {
         const old = add.innerHTML;
@@ -957,7 +1034,7 @@
     const dr = t.closest("[data-drawer]");
     if (dr) { e.preventDefault(); openDrawer(dr.dataset.drawer); $("#toast").classList.remove("show"); return; }
     const tab = t.closest("[data-tab]");
-    if (tab) { drawerTab = tab.dataset.tab; renderDrawer(); return; }
+    if (tab) { drawerTab = tab.dataset.tab; renderDrawer(); staggerDrawer(); return; }
     const goB = t.closest("[data-go]");
     if (goB) { go(goB.dataset.go); return; }
     const sc = t.closest("[data-scroll]");
@@ -977,6 +1054,8 @@
   window.addEventListener("scroll", () => {
     const y = window.scrollY;
     $("#header").classList.toggle("stuck", y > 40);
+    const max = document.documentElement.scrollHeight - innerHeight;
+    $("#progress").style.transform = `scaleX(${max > 0 ? y / max : 0})`;
     $("#toTop").classList.toggle("show", y > 600);
   }, { passive: true });
   $("#toTop").onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });

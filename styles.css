@@ -587,3 +587,158 @@ main { min-height: 60vh; }
   .form { grid-template-columns: 1fr; }
   .modal-box { padding: 22px 18px; }
 }
+
+/* ===== Movimiento táctil y de navegación ===== */
+@keyframes pageIn { from { opacity: 0; transform: translate3d(0, 14px, 0); } }
+@keyframes ripple { to { transform: scale(1); opacity: 0; } }
+@keyframes flip { 0% { transform: translateY(-60%); opacity: 0; } 60% { transform: translateY(8%); opacity: 1; } 100% { transform: none; } }
+@keyframes bob { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-8px) rotate(-1.5deg); } }
+@keyframes lineIn { from { opacity: 0; transform: translate3d(28px, 0, 0); } }
+@keyframes shine { to { background-position: 200% 0; } }
+
+#app.page-in { animation: pageIn .45s cubic-bezier(.2, .75, .2, 1) both; }
+.progress { position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 60; background: linear-gradient(90deg, var(--accent), #7c5cff, var(--red)); transform: scaleX(0); transform-origin: 0 50%; pointer-events: none; }
+
+.has-ripple { overflow: hidden; }
+.btn-add.has-ripple, .btn-dark.has-ripple, .opt.has-ripple, .chip.has-ripple, .tabs button.has-ripple, .f-list button.has-ripple, .sc-btn.has-ripple, .sl-arrow.has-ripple { position: relative; }
+.ripple { position: absolute; border-radius: 50%; background: rgba(255, 255, 255, .35); transform: scale(0); animation: ripple .6s ease-out forwards; pointer-events: none; z-index: 9; }
+.opt .ripple, .chip .ripple, .f-list .ripple, .sc-btn .ripple { background: rgba(36, 52, 154, .15); }
+
+.fly-ghost { position: fixed; z-index: 200; object-fit: contain; background: #fff; box-shadow: 0 14px 34px rgba(20, 30, 60, .3); pointer-events: none; will-change: transform; }
+.cd b { display: inline-block; }
+.cd b.flip { animation: flip .45s cubic-bezier(.2, .75, .2, 1); }
+.num { font-style: normal; font-variant-numeric: tabular-nums; }
+
+/* Productos del hero, tiles y banners flotan suavemente */
+.slide.on .plate { animation: bob 6s 1.2s ease-in-out infinite; }
+.tile .t-img img { animation: bob 7s ease-in-out infinite; }
+.tile:nth-child(2) .t-img img { animation-delay: -1.7s; }
+.tile:nth-child(3) .t-img img { animation-delay: -3.4s; }
+.tile:nth-child(4) .t-img img { animation-delay: -5.1s; }
+.banner .b-img img { animation: bob 8s ease-in-out infinite; }
+.banner:nth-child(2) .b-img img { animation-delay: -2.6s; }
+.banner:nth-child(3) .b-img img { animation-delay: -5.2s; }
+
+/* Descuentos que laten, barra de ahorro con brillo */
+.disc { animation: logoTagGlow 4s 1s ease-in-out infinite; }
+.save-bar i { background-size: 200% 100%; background-image: linear-gradient(90deg, var(--red), #ff7a45, var(--red)); animation: shine 2.4s linear infinite; }
+
+/* Header más compacto al bajar */
+.header-in, .logo-word { transition: height .25s ease, font-size .25s ease; }
+.header.stuck .header-in { height: 68px; }
+.header.stuck .logo-word { font-size: 34px; }
+
+/* Drawer: renglones entran escalonados al abrir */
+.drawer.stagger .line, .drawer.stagger .empty { animation: lineIn .45s cubic-bezier(.2, .75, .2, 1) backwards; }
+.drawer.stagger .line:nth-child(2) { animation-delay: .05s; }
+.drawer.stagger .line:nth-child(3) { animation-delay: .1s; }
+.drawer.stagger .line:nth-child(4) { animation-delay: .15s; }
+.drawer.stagger .line:nth-child(n+5) { animation-delay: .2s; }
+
+/* Feedback al presionar (clave en pantallas táctiles) */
+.card, .tile, .cat, .banner, .mini, .brand, .btn-add, .btn-dark, .opt, .h-act { -webkit-tap-highlight-color: transparent; }
+.btn-add:active, .btn-dark:active, .opt:active, .h-act:active, .icon-btn:active { transform: scale(.95); }
+.card:active, .mini:active, .brand:active { transform: scale(.98); transition-duration: .08s; }
+.tile:active, .cat:active, .banner:active { transform: scale(.97); transition-duration: .08s; }
+
+/* ===== Pantallas táctiles (Galaxy Tab, iPad, celulares) ===== */
+@media (hover: none) {
+  .fav { opacity: 1; transform: none; }
+  .card:hover, .mini:hover { transform: none; box-shadow: var(--shadow); }
+  .card:hover .card-img img { transform: none; }
+  .card-img img.alt { display: none; }
+  .tile:hover, .cat:hover, .banner:hover { transform: none; box-shadow: none; }
+  .g-main { cursor: default; }
+  .g-main:hover img { transform: none; }
+  /* objetivos de toque de al menos 44px */
+  .icon-btn { width: 44px; height: 44px; }
+  .qty { height: 52px; }
+  .qty button { width: 48px; }
+  .line .qty { height: 40px; }
+  .line .qty button { width: 40px; }
+  .opt { padding: 10px 16px 10px 10px; font-size: 14px; }
+  .opt.nosw { padding-left: 16px; }
+  .opt .sw { width: 18px; height: 18px; }
+  .f-list button, .f-list label { padding: 11px 10px; }
+  .btn-add { padding: 13px 14px; }
+  .sc-btn { width: 48px; height: 48px; }
+  .line-del { padding: 8px 0; }
+  .tabs button { padding: 10px 16px; }
+  /* en táctil el slider se pasa deslizando; los puntos son el control */
+  .sl-arrow { display: none; }
+  .slide { padding-left: 44px; }
+  .dots { gap: 4px; }
+  .dots button { width: 12px; height: 12px; border-radius: 6px; box-sizing: content-box; padding: 6px; background-clip: content-box; }
+  .dots button.on { width: 34px; }
+}
+
+/* Carruseles: 7 columnas solo en pantallas anchas de verdad */
+@media (max-width: 1400px) { .row-scroll { grid-auto-columns: calc((100% - 4 * 16px) / 5); } }
+@media (max-width: 1100px) { .row-scroll { grid-auto-columns: calc((100% - 3 * 16px) / 4); } }
+
+/* ===== Galaxy Tab S10 Ultra horizontal (~1230-1320 px de ancho) ===== */
+@media (min-width: 1101px) and (max-width: 1400px) {
+  .header-in { gap: 22px; }
+  .hero { grid-template-columns: 1.35fr 1fr; }
+  .slide { padding: 32px 44px 40px 76px; }
+  .slide h1 { font-size: 36px; margin-bottom: 12px; }
+  .slide p { font-size: 15px; margin-bottom: 16px; }
+  .slide .slide-from { margin-bottom: 16px; }
+  .slide .slide-from b { font-size: 24px; }
+  .tile h3 { font-size: 22px; }
+  .nav-promo { display: none; }
+  .cats { grid-template-columns: repeat(6, 1fr); gap: 12px; }
+  .cat { padding: 16px; }
+  .cat .c-img { width: 92px; height: 92px; }
+  .mini-grid { grid-template-columns: repeat(3, 1fr); }
+  .mini { grid-template-columns: 76px 1fr; gap: 10px; }
+  .shop { grid-template-columns: 240px 1fr; }
+  .grid { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+}
+/* Pantallas bajas (tablet horizontal): el header fijo ocupa menos */
+@media (max-height: 860px) and (min-width: 761px) {
+  .header-in { height: 72px; }
+  .mainnav-in { height: 46px; }
+  .slider { min-height: 400px; }
+  .tile { min-height: 192px; }
+  .filters, .gallery { top: 132px; }
+  .filters { max-height: calc(100vh - 148px); }
+}
+
+/* ===== Galaxy Tab S10 Ultra vertical (~770-830 px de ancho) ===== */
+@media (min-width: 761px) and (max-width: 1100px) {
+  .header-in { gap: 16px; }
+  .h-act span { display: none; }
+  .h-actions { gap: 14px; }
+  .search select { width: 140px; }
+  .slider { min-height: 400px; }
+  .slide { padding: 36px 40px; }
+  .tile { min-height: 190px; }
+  .cats { grid-template-columns: repeat(3, 1fr); }
+  .deal { grid-template-columns: 38% 1fr; }
+  .banners { grid-template-columns: repeat(3, 1fr); }
+  .banner { padding: 20px; min-height: 210px; justify-content: flex-start; }
+  .banner h3 { font-size: 19px; max-width: 100%; margin-bottom: 8px; }
+  .banner span { max-width: 100%; }
+  .banner .b-img { width: 46%; right: -8px; top: auto; bottom: -12px; transform: rotate(-6deg); }
+  .banner:hover .b-img { transform: rotate(0); }
+  .featured { grid-template-columns: 1fr 1.6fr; }
+  .feat-big .card-img { max-height: 260px; }
+  .mini-grid { grid-template-columns: 1fr; gap: 12px; }
+  .grid { grid-template-columns: repeat(3, 1fr); }
+  .pdp { grid-template-columns: 1fr 1fr; gap: 24px; padding: 24px; }
+  .gallery { position: sticky; top: 140px; grid-template-columns: 1fr; }
+  .thumbs { flex-direction: row; order: 2; }
+  .thumbs button { width: 70px; }
+  .pdp-info h1 { font-size: 24px; }
+  .features { grid-template-columns: repeat(2, 1fr); }
+  .f-cols { grid-template-columns: 1.2fr 1fr 1fr; }
+  .f-news { grid-column: 1 / -1; }
+}
+@media (max-width: 760px) { .row-scroll { grid-auto-columns: 46%; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .slide.on .plate, .tile .t-img img, .banner .b-img img, .disc, .save-bar i { animation: none !important; }
+  #app.page-in { animation: none; }
+  .ripple, .fly-ghost { display: none; }
+}
