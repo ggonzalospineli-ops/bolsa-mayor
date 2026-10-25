@@ -425,6 +425,100 @@ main { min-height: 60vh; }
 .fade-in { animation: fadeUp .45s both; }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } }
 
+/* ===== Movimiento premium ===== */
+@keyframes premiumRise {
+  from { opacity: 0; transform: translate3d(0, 26px, 0) scale(.985); filter: blur(5px); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); filter: blur(0); }
+}
+@keyframes heroCopyIn {
+  from { opacity: 0; transform: translate3d(-24px, 18px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes heroProductIn {
+  0% { opacity: 0; transform: translate3d(28px, 12px, 0) scale(.82) rotate(5deg); }
+  65% { opacity: 1; transform: translate3d(-4px, -2px, 0) scale(1.025) rotate(-1deg); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes pillFloat {
+  0%, 100% { transform: translateY(0) rotate(10deg); }
+  50% { transform: translateY(-7px) rotate(7deg); }
+}
+@keyframes logoTagGlow {
+  0%, 78%, 100% { box-shadow: 0 0 0 rgba(227, 38, 47, 0); }
+  88% { box-shadow: 0 0 0 7px rgba(227, 38, 47, .18); }
+}
+
+.reveal { opacity: 0; transform: translate3d(0, 26px, 0) scale(.985); }
+.reveal.is-visible { animation: premiumRise .8s cubic-bezier(.2, .75, .2, 1) both; }
+.reveal.is-visible .sec-head { animation: heroCopyIn .65s .08s cubic-bezier(.2, .75, .2, 1) both; }
+.reveal.is-visible :is(.card, .cat, .deal, .banner, .brand, .mini, .feat-big) {
+  animation: premiumRise .68s cubic-bezier(.2, .75, .2, 1) backwards;
+}
+.reveal.is-visible :is(.card, .cat, .deal, .banner, .brand, .mini):nth-child(2) { animation-delay: .055s; }
+.reveal.is-visible :is(.card, .cat, .deal, .banner, .brand, .mini):nth-child(3) { animation-delay: .11s; }
+.reveal.is-visible :is(.card, .cat, .deal, .banner, .brand, .mini):nth-child(4) { animation-delay: .165s; }
+.reveal.is-visible :is(.card, .cat, .deal, .banner, .brand, .mini):nth-child(5) { animation-delay: .22s; }
+.reveal.is-visible :is(.card, .cat, .deal, .banner, .brand, .mini):nth-child(6) { animation-delay: .275s; }
+
+.slide.on .slide-kicker { animation: heroCopyIn .6s .08s both; }
+.slide.on h1 { animation: heroCopyIn .7s .14s both; }
+.slide.on p { animation: heroCopyIn .7s .2s both; }
+.slide.on .slide-from { animation: heroCopyIn .7s .26s both; }
+.slide.on .btn-dark { animation: heroCopyIn .7s .32s both; }
+.slide.on .slide-img { animation: heroProductIn .95s .12s cubic-bezier(.16, 1, .3, 1) both; }
+.slide.on .pill { animation: pillFloat 3.4s .9s ease-in-out infinite; }
+.slide::before, .slide::after { transition: transform 1.2s cubic-bezier(.2, .75, .2, 1); }
+.slide.on::before { transform: translate3d(-24px, 18px, 0); }
+.slide.on::after { transform: translate3d(20px, -14px, 0); }
+.logo-tag { animation: logoTagGlow 5s 1.4s ease-in-out infinite; }
+
+.motion-surface {
+  --mx: 50%;
+  --my: 50%;
+  --rx: 0deg;
+  --ry: 0deg;
+  position: relative;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+.motion-surface.motion-active {
+  transform: perspective(900px) rotateX(var(--rx)) rotateY(var(--ry)) translateY(-4px);
+  transition: transform .12s ease-out, box-shadow .25s ease;
+}
+.motion-surface::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(320px circle at var(--mx) var(--my), rgba(255,255,255,.32), transparent 58%);
+  transition: opacity .28s ease;
+}
+.motion-surface.motion-active::after { opacity: 1; }
+.card.motion-surface::after, .brand.motion-surface::after, .deal.motion-surface::after, .feat-big.motion-surface::after {
+  background: radial-gradient(280px circle at var(--mx) var(--my), rgba(36,52,154,.08), transparent 62%);
+}
+.btn-dark, .btn-add, .news button, .search > button { position: relative; overflow: hidden; isolation: isolate; }
+.btn-dark::after, .btn-add::after, .news button::after, .search > button::after {
+  content: "";
+  position: absolute;
+  inset: -80% -30%;
+  z-index: -1;
+  background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,.28) 48%, transparent 61%);
+  transform: translateX(-70%) rotate(8deg);
+  transition: transform .65s cubic-bezier(.2, .75, .2, 1);
+}
+.btn-dark:hover::after, .btn-add:hover::after, .news button:hover::after, .search > button:hover::after { transform: translateX(70%) rotate(8deg); }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+  .reveal, .reveal.is-visible { opacity: 1; transform: none; filter: none; animation: none; }
+  .motion-surface, .motion-surface.motion-active { transform: none; }
+}
+
 /* ===== Responsive ===== */
 @media (max-width: 1280px) {
   .row-scroll { grid-auto-columns: calc((100% - 4 * 16px) / 5); }

@@ -5,6 +5,14 @@
   const MIN_COMPRA = 150000;
   const EMAIL_PEDIDOS = "pedidos@bolsamayor.com.ar";
 
+  // Política comercial: costo con 20% de descuento de empleado, 25% de margen
+  // operativo objetivo y 6,29% de comisión máxima por cobro inmediato.
+  const EMPLOYEE_DISCOUNT = 0.20;
+  const TARGET_OPERATING_MARGIN = 0.25;
+  const PAYMENT_FEE = 0.0629;
+  const PRICE_MULTIPLIER = (1 - EMPLOYEE_DISCOUNT) / (1 - TARGET_OPERATING_MARGIN - PAYMENT_FEE);
+  const salePrice = (officialPrice) => officialPrice ? Math.ceil((officialPrice * PRICE_MULTIPLIER) / 100) * 100 : 0;
+
   // ---------- utilidades ----------
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -62,7 +70,14 @@
     return hit ? COLORS[hit] : "#d1d5db";
   };
 
-  const P = (window.PRODUCTOS || []).map((p, i) => {
+  const P = (window.PRODUCTOS || []).map((source, i) => {
+    const p = {
+      ...source,
+      p: salePrice(source.p),
+      r: salePrice(source.r),
+      officialPrice: source.p,
+      officialRegularPrice: source.r,
+    };
     const cs = new Set(p.c.map((c) => c.toLowerCase()));
     const brand = BRANDS.find((b) => cs.has(b.toLowerCase())) || "";
     const disc = p.o && p.r > p.p ? Math.round(100 - (p.p * 100) / p.r) : 0;
@@ -836,6 +851,55 @@
 
   function go(hash) { if (location.hash === hash) route(); else location.hash = hash; }
 
+  // ---------- movimiento premium ----------
+  let revealObserver;
+  function initPremiumMotion() {
+    const app = $("#app");
+    if (!app) return;
+
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    document.body.classList.toggle("reduce-motion", reduced);
+    revealObserver?.disconnect();
+
+    const reveals = $$(".hero, .section, .marquee, .shop", app);
+    reveals.forEach((el) => el.classList.add("reveal"));
+
+    if (reduced || !("IntersectionObserver" in window)) {
+      reveals.forEach((el) => el.classList.add("is-visible"));
+      return;
+    }
+
+    revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add("is-visible");
+        revealObserver.unobserve(entry.target);
+      });
+    }, { threshold: 0.12, rootMargin: "0px 0px -7%" });
+    reveals.forEach((el) => revealObserver.observe(el));
+
+    // Profundidad reactiva, limitada a punteros precisos para no afectar móviles.
+    if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+    $$(".tile, .card, .cat, .banner, .brand, .deal, .feat-big", app).forEach((el) => {
+      el.classList.add("motion-surface");
+      el.addEventListener("pointermove", (e) => {
+        const r = el.getBoundingClientRect();
+        const x = (e.clientX - r.left) / r.width;
+        const y = (e.clientY - r.top) / r.height;
+        el.style.setProperty("--mx", `${x * 100}%`);
+        el.style.setProperty("--my", `${y * 100}%`);
+        el.style.setProperty("--rx", `${(0.5 - y) * 2.2}deg`);
+        el.style.setProperty("--ry", `${(x - 0.5) * 2.2}deg`);
+        el.classList.add("motion-active");
+      });
+      el.addEventListener("pointerleave", () => {
+        el.classList.remove("motion-active");
+        el.style.removeProperty("--rx");
+        el.style.removeProperty("--ry");
+      });
+    });
+  }
+
   function route() {
     clearInterval(sliderTimer);
     clearInterval(countdownTimer);
@@ -848,6 +912,7 @@
     if (path.startsWith("/p/")) renderProduct(path.slice(3));
     else if (path.startsWith("/tienda")) renderShop(params);
     else renderHome();
+    initPremiumMotion();
     $$("#navLinks a").forEach((a) => a.classList.toggle("active", a.getAttribute("href") === "#" + h || (h === "/" && a.getAttribute("href") === "#/")));
     if (!prevScroll) window.scrollTo({ top: 0, behavior: "instant" });
     route.last = path;
