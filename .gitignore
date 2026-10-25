@@ -1,0 +1,4 @@
+scraper/*.json
+scraper/*.csv
+scraper/*.xlsx
+__pycache__/

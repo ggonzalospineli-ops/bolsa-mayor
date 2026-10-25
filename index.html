@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bolsa Mayor — Marroquinería por mayor</title>
+<meta name="description" content="Distribuidora mayorista de marroquinería y accesorios: carteras, mochilas, valijas, billeteras, bazar y más. Envíos a todo el país.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ===== Barra superior ===== -->
+<div class="topbar">
+  <div class="wrap topbar-in">
+    <div class="tb-left">
+      <span>🇦🇷 Envíos a todo el país</span>
+      <span class="tb-sep hide-sm">Venta mayorista · Compra mínima $150.000 + IVA</span>
+    </div>
+    <nav class="tb-right hide-sm">
+      <a href="#/tienda?oferta=1">Ofertas</a>
+      <a href="mailto:pedidos@bolsamayor.com.ar">pedidos@bolsamayor.com.ar</a>
+    </nav>
+  </div>
+</div>
+
+<!-- ===== Header ===== -->
+<header class="header" id="header">
+  <div class="wrap header-in">
+    <button class="icon-btn only-sm" id="menuBtn" aria-label="Menú">
+      <svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+    </button>
+    <a href="#/" class="logo" aria-label="Bolsa Mayor, inicio">
+      <span class="logo-word">bolsa</span><span class="logo-tag">MAYOR</span>
+    </a>
+
+    <form class="search" id="searchForm" role="search">
+      <select id="searchCat" aria-label="Categoría">
+        <option value="">Todas las categorías</option>
+      </select>
+      <input id="searchInput" type="search" placeholder="Buscar mochilas, carteras, valijas…" autocomplete="off">
+      <button type="submit" aria-label="Buscar">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      </button>
+      <div class="suggest" id="suggest" hidden></div>
+    </form>
+
+    <div class="h-actions">
+      <a class="h-act hide-sm" href="mailto:pedidos@bolsamayor.com.ar">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>
+        <span><small>Mayoristas</small><b>Contacto</b></span>
+      </a>
+      <button class="h-act" data-drawer="fav">
+        <i class="badge-wrap"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.5-9-9a5 5 0 0 1 9-3 5 5 0 0 1 9 3c-2 4.5-9 9-9 9z"/></svg><em class="count" id="favCount">0</em></i>
+        <span class="hide-sm"><small>Favoritos</small><b>Mi lista</b></span>
+      </button>
+      <button class="h-act" data-drawer="cart">
+        <i class="badge-wrap"><svg viewBox="0 0 24 24"><path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.5L21 8H6.2"/><circle cx="10" cy="20.5" r="1.3"/><circle cx="17" cy="20.5" r="1.3"/></svg><em class="count" id="cartCount">0</em></i>
+        <span class="hide-sm"><small>Tu pedido</small><b id="cartTotalH">$0</b></span>
+      </button>
+    </div>
+  </div>
+
+  <nav class="mainnav">
+    <div class="wrap mainnav-in">
+      <div class="dept">
+        <button class="dept-btn" id="deptBtn">
+          <svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+          Comprar por categoría
+        </button>
+        <div class="dept-menu" id="deptMenu"></div>
+      </div>
+      <div class="navlinks" id="navLinks"></div>
+      <a class="nav-promo hide-md" href="#/tienda?oferta=1">
+        <svg viewBox="0 0 24 24"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg>
+        <span id="promoText">Ofertas de hasta 50% OFF</span>
+      </a>
+    </div>
+  </nav>
+</header>
+
+<main id="app"></main>
+
+<!-- ===== Footer ===== -->
+<footer class="footer">
+  <div class="wrap">
+    <div class="features">
+      <div class="feat"><svg viewBox="0 0 24 24"><path d="M1 6h13v10H1zM14 10h4l3 3v3h-7z"/><circle cx="5.5" cy="18" r="2"/><circle cx="17.5" cy="18" r="2"/></svg><div><b>Envíos a todo el país</b><span>Despachamos a cualquier provincia</span></div></div>
+      <div class="feat"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/></svg><div><b>Venta mayorista</b><span>Compra mínima $150.000 + IVA</span></div></div>
+      <div class="feat"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg><div><b>Atención a comercios</b><span>pedidos@bolsamayor.com.ar</span></div></div>
+      <div class="feat"><svg viewBox="0 0 24 24"><path d="M20 7 9 18l-5-5"/></svg><div><b id="featCount">+1400 productos</b><span>Catálogo siempre actualizado</span></div></div>
+    </div>
+    <div class="f-cols">
+      <div class="f-col f-about">
+        <a href="#/" class="logo"><span class="logo-word">bolsa</span><span class="logo-tag">MAYOR</span></a>
+        <p>Distribuidora mayorista de marroquinería y accesorios: carteras, mochilas, bolsos, valijas, bijouterie y bazar.</p>
+        <div class="socials">
+          <a href="mailto:pedidos@bolsamayor.com.ar" aria-label="Email" style="--c:#12b5d6"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></a>
+        </div>
+      </div>
+      <div class="f-col"><h4>Categorías</h4><ul id="fCats"></ul></div>
+      <div class="f-col"><h4>Marcas</h4><ul id="fBrands"></ul></div>
+      <div class="f-col f-news">
+        <h4>Novedades para tu comercio</h4>
+        <p>Dejanos tu email y te avisamos cuando entren productos nuevos y ofertas.</p>
+        <form id="newsForm" class="news">
+          <input type="email" required placeholder="Tu email…" aria-label="Email">
+          <button>Suscribirme</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="f-bottom">
+    <div class="wrap">© <span id="year"></span> Bolsa Mayor · Marroquinería y accesorios por mayor</div>
+  </div>
+</footer>
+
+<!-- ===== Drawers / overlays ===== -->
+<div class="overlay" id="overlay" hidden></div>
+
+<aside class="drawer" id="drawer" aria-hidden="true">
+  <div class="drawer-head">
+    <div class="tabs">
+      <button data-tab="cart" class="active">Pedido <em id="tabCart">0</em></button>
+      <button data-tab="fav">Favoritos <em id="tabFav">0</em></button>
+    </div>
+    <button class="icon-btn" data-close aria-label="Cerrar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  </div>
+  <div class="drawer-body" id="drawerBody"></div>
+  <div class="drawer-foot" id="drawerFoot"></div>
+</aside>
+
+<aside class="sidemenu" id="sidemenu" aria-hidden="true">
+  <div class="drawer-head"><b>Categorías</b><button class="icon-btn" data-close aria-label="Cerrar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+  <div id="sideBody"></div>
+</aside>
+
+<div class="modal" id="modal" hidden>
+  <div class="modal-box" role="dialog" aria-modal="true">
+    <button class="icon-btn modal-x" data-close aria-label="Cerrar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<button class="totop" id="toTop" aria-label="Volver arriba"><svg viewBox="0 0 24 24"><path d="m6 15 6-6 6 6"/></svg></button>
+
+<script src="productos.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
