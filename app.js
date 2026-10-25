@@ -5,13 +5,22 @@
   const MIN_COMPRA = 150000;
   const EMAIL_PEDIDOS = "pedidos@bolsamayor.com.ar";
 
-  // Política comercial: costo con 20% de descuento de empleado, 25% de margen
-  // operativo objetivo y 6,29% de comisión máxima por cobro inmediato.
+  // Política comercial: costo con 20% de descuento de empleado, margen operativo
+  // estable por producto entre 20% y 30%, y 6,29% de comisión por cobro inmediato.
   const EMPLOYEE_DISCOUNT = 0.20;
-  const TARGET_OPERATING_MARGIN = 0.25;
+  const MIN_OPERATING_MARGIN = 0.20;
+  const MAX_OPERATING_MARGIN = 0.30;
   const PAYMENT_FEE = 0.0629;
-  const PRICE_MULTIPLIER = (1 - EMPLOYEE_DISCOUNT) / (1 - TARGET_OPERATING_MARGIN - PAYMENT_FEE);
-  const salePrice = (officialPrice) => officialPrice ? Math.ceil((officialPrice * PRICE_MULTIPLIER) / 100) * 100 : 0;
+  const marginForProduct = (id) => {
+    let seed = Math.imul((Number(id) || 1) ^ 0x9e3779b9, 2654435761) >>> 0;
+    seed = (seed ^ (seed >>> 16)) >>> 0;
+    return MIN_OPERATING_MARGIN + (seed / 4294967295) * (MAX_OPERATING_MARGIN - MIN_OPERATING_MARGIN);
+  };
+  const salePrice = (officialPrice, margin) => {
+    if (!officialPrice) return 0;
+    const multiplier = (1 - EMPLOYEE_DISCOUNT) / (1 - margin - PAYMENT_FEE);
+    return Math.ceil((officialPrice * multiplier) / 10) * 10;
+  };
 
   // ---------- utilidades ----------
   const $ = (s, el = document) => el.querySelector(s);
@@ -71,12 +80,14 @@
   };
 
   const P = (window.PRODUCTOS || []).map((source, i) => {
+    const operatingMargin = marginForProduct(source.id);
     const p = {
       ...source,
-      p: salePrice(source.p),
-      r: salePrice(source.r),
+      p: salePrice(source.p, operatingMargin),
+      r: salePrice(source.r, operatingMargin),
       officialPrice: source.p,
       officialRegularPrice: source.r,
+      operatingMargin,
     };
     const cs = new Set(p.c.map((c) => c.toLowerCase()));
     const brand = BRANDS.find((b) => cs.has(b.toLowerCase())) || "";
