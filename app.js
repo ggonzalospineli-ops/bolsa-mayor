@@ -578,7 +578,7 @@
                 .map(([v, t]) => `<option value="${v}" ${f.orden === v ? "selected" : ""}>${t}</option>`).join("")}
             </select>
           </div>
-          ${list.length ? `<div class="grid" id="shopGrid">${list.slice(0, shown).map(card).join("")}</div>
+          ${list.length ? `<div class="grid grid-enter" id="shopGrid" aria-live="polite">${list.slice(0, shown).map(card).join("")}</div>
             <div class="more">${shown < list.length ? `<span>Mostrando ${shown} de ${list.length}</span><button class="btn-dark" id="moreBtn">Cargar más productos</button>` : `<span>Viste los ${list.length} productos</span>`}</div>`
             : `<div class="empty">${ico.search}<b>No encontramos productos</b>Probá con otra búsqueda o quitá algunos filtros.<br><br><a class="btn-dark" href="#/tienda">Ver todo el catálogo</a></div>`}
         </div>
@@ -704,8 +704,17 @@
     $(".thumbs", root).addEventListener("click", (e) => {
       const b = e.target.closest("[data-img]");
       if (!b) return;
+      const main = $("#gMain img");
+      if (main.src === b.dataset.img) return;
       $$(".thumbs button", root).forEach((x) => x.classList.toggle("on", x === b));
-      $("#gMain img").src = b.dataset.img;
+      // La foto no cambia de golpe: sale y entra como una galería de tienda.
+      gm.classList.remove("is-changing"); void gm.offsetWidth; gm.classList.add("is-changing");
+      main.src = b.dataset.img;
+      main.onload = () => {
+        gm.classList.remove("is-changing");
+        gm.classList.add("is-settled");
+        setTimeout(() => gm.classList.remove("is-settled"), 360);
+      };
     });
     const gm = $("#gMain");
     gm.addEventListener("mousemove", (e) => {
