@@ -390,10 +390,14 @@
       </section>` : ""}
     </div>
 
-    <div class="marquee"><div class="marquee-track">${Array(2).fill([
-      "Marroquinería de marca", "Envíos a todo el país", "Confirmamos stock antes de que pagues",
-      `Ofertas de hasta ${maxDisc(P)}% OFF`, `+${Math.floor(P.length / 100) * 100} productos`, "Las mejores marcas de marroquinería",
-    ].map((t) => `<span>${ico.bolt} ${t}</span>`).join("")).join("")}</div></div>
+    ${(() => {
+      const ticker = [
+        "Marroquinería de marca", "Envíos a todo el país", "Confirmamos stock antes de que pagues",
+        `Ofertas de hasta ${maxDisc(P)}% OFF`, `+${Math.floor(P.length / 100) * 100} productos`, "Las mejores marcas de marroquinería",
+      ].map((t) => `<span>${ico.bolt} ${t}</span>`).join("");
+      // Dos grupos idénticos: el fin del primero coincide exactamente con el inicio del segundo.
+      return `<div class="marquee"><div class="marquee-track"><div class="marquee-group">${ticker}</div><div class="marquee-group" aria-hidden="true">${ticker}</div></div></div>`;
+    })()}
 
     <div class="wrap">
       <section class="section">

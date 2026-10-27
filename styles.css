@@ -248,11 +248,12 @@ main { min-height: 60vh; }
 
 /* ===== Marquee ===== */
 .marquee { background: var(--primary); color: #fff; overflow: hidden; padding: 16px 0; margin: 44px 0; }
-.marquee-track { display: flex; gap: 40px; width: max-content; animation: marquee 40s linear infinite; font-weight: 500; font-size: 15px; }
+.marquee-track { display: flex; width: max-content; animation: marquee 44s linear infinite; font-weight: 500; font-size: 15px; will-change: transform; }
+.marquee-group { display: flex; flex: 0 0 auto; gap: 40px; padding-right: 40px; }
 .marquee-track span { display: flex; align-items: center; gap: 10px; white-space: nowrap; }
 .marquee-track svg { width: 16px; height: 16px; fill: var(--accent); stroke: none; }
 .marquee:hover .marquee-track { animation-play-state: paused; }
-@keyframes marquee { to { transform: translateX(-50%); } }
+@keyframes marquee { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(-50%, 0, 0); } }
 
 /* ===== Marcas ===== */
 .brands { background: #fff; border-radius: var(--radius); padding: 18px; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; box-shadow: var(--shadow); }
