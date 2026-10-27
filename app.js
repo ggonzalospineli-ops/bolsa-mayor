@@ -926,9 +926,24 @@
 
   // ---------- movimiento premium ----------
   let revealObserver;
+  function initMarquee() {
+    const track = $(".marquee-track");
+    if (!track) return;
+    const group = $(".marquee-group", track);
+    if (!group) return;
+    // Medir el primer grupo evita el redondeo de translateX(-50%) que puede
+    // dejar un pequeño salto visible al completar una vuelta.
+    requestAnimationFrame(() => {
+      const step = group.getBoundingClientRect().width;
+      if (!step) return;
+      track.style.setProperty("--marquee-shift", `${-step}px`);
+      track.style.setProperty("--marquee-duration", `${Math.max(28, step / 42)}s`);
+    });
+  }
   function initPremiumMotion() {
     const app = $("#app");
     if (!app) return;
+    initMarquee();
 
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     document.body.classList.toggle("reduce-motion", reduced);
@@ -1073,6 +1088,7 @@
   }, { passive: true });
   $("#toTop").onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
   window.addEventListener("hashchange", route);
+  window.addEventListener("resize", () => initMarquee(), { passive: true });
 
   initNav();
   initSearch();
